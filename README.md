@@ -1,6 +1,11 @@
 # ATTiny85 / Digispark - Raspberry Pi Power Control
-When the power supply of my Rasptouch audio player failed, I decided to upgrade the power supply to a 5V lineair one. However, this also this also meant that I no longer could use the integrated power management module to control the Raspberry Pi. Although many versions already exist, I decided to make my own version. This version is based on a ATTiny85 / Digispark module which controls a 5V relay board. Communication with the Raspberry Pi is performed via a (software) serial port. It is also possible to connect a TM1637 based display.
+When the power supply of my Rasptouch based audio player failed, I decided to upgrade the switching power supply to a 5V lineair one. However, this also this also meant that I no longer could use the integrated power management module to control the Raspberry Pi. Although many versions of a Raspberry Pi power controller already exist, I decided to make my own, so I could tailor the exact behaviour of the power button. 
+This version is based on a simple ATTiny85 / Digispark module which controls a 5V relay board. 
+Communication with the Raspberry Pi is performed via a (software) serial port. As an added bonus, it is also possible to connect a TM1637 based 4 character LCS display to show the power status.
+
+
 ![power switch](img/switch.jpg)
+
 
 # Pin assignment
 The button pin is connected with ADC0 of the ATTiny85, which is also the reset pin. To prevent the microcontroller to reset, 
@@ -39,3 +44,17 @@ UART RX         - RPi GPIO 15 / RXD / pin 10  - serial receive
 
 # OS integration
 The scripts folder contains sample script files for integrating the power switch.
+Communication with the microcontoller the serial port of the Raspberry Pi is used (/dev/ttyAMA0).
+
+The following commands to the microcontroller are supported:
+* 'BOOTOK'   - OS boot done
+* 'SHUTDOWN' - shutdown initiated by software
+* 'REBOOT'   - reboot initiated by software
+* 'LED'      - use led for notification
+* 'DISPLAY'  - use display for notification
+* 'STATUS'   - get current power status
+* 'MILLIS'   - get elapsed time in milliseconds
+
+The microcontroller instructs the Raspberry Pi to perform a shutdown via the command:
+* 'shutdown' - shutdown initiated by the power button
+
