@@ -1,5 +1,5 @@
 # ATTiny85 / Digispark - Raspberry Pi Power Control
-
+When the power supply of my Rasptouch audio player failed, I decided to upgrade the power supply to a 5V lineair one. However, this also this also meant that I no longer could use the integrated power management module to control the Raspberry Pi. Although many versions already exist, I decided to make my own version. This version is based on a ATTiny85 / Digispark module which controls a 5V relay board. Communication with the Raspberry Pi is performed via a (software) serial port. It is also possible to connect a TM1637 based display.
 ![power switch](img/switch.jpg)
 
 # Pin assignment
@@ -10,7 +10,7 @@ The switch point is around 930 on the scale between 0 and 1023.
 The UART TX pin of the raspberry pi is directly connected with the RX pin on the ATTiny85.
 The TX pin on the ATTiny85 is connected to the UART RX pin of the raspberry pi using a voltage divider.
  
-PB1 and PB2 can be used to drive a TM1637 based display
+PB1 and PB2 can be used to drive a TM1637 based display.
 PB0 is used to trigger a 5V relay switch module.
 
 ## ATTiny85 pin assignment
