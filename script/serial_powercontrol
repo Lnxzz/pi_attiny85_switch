@@ -1,0 +1,38 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          powercontrol
+# Required-Start: udev mountkernfs $remote_fs
+# Required-Stop:
+# Default-Start: S 2 3 4 5
+# Default-Stop:
+# Short-Description: attiny85 power control
+# Description:
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+case "$1" in
+  start)
+    # configure serial port
+    /usr/bin/stty -F /dev/ttyAMA0 9600 raw -echo
+    # remove serial out temp gile
+    /bin/rm -f /tmp/ttyAMA0.dat
+    # allow serial port access to user pi
+    /sbin/usermod -a -G dialout pi
+    # send power button boot ok message
+    /home/pi/serial_bootok.sh
+    # start power button listener shutdown script
+    /home/pi/serial_wait_shutdown.sh&
+    ;;
+  stop)
+    ;;
+  restart)
+    ;;
+  force-reload)
+    ;;
+  *)
+    echo "Usage: $0 start" >&2
+    exit 3
+    ;;
+esac
+
