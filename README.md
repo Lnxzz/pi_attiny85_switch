@@ -1,7 +1,7 @@
 # ATTiny85 / Digispark - Raspberry Pi Power Control
 When the power supply of my Rasptouch based audio player failed, I decided to upgrade the switching power supply to a 5V lineair one. However, this also this also meant that I no longer could use the integrated power management module to control the Raspberry Pi. Although many versions of a Raspberry Pi power controller already exist, I decided to make my own, so I could tailor the exact behaviour of the power button. 
 This version is based on a simple ATTiny85 / Digispark module which controls a 5V relay board. 
-Communication with the Raspberry Pi is performed via a (software) serial port. As an added bonus, it is also possible to connect a TM1637 based 4 character LCS display to show the power status.
+Communication with the Raspberry Pi is performed via a (software) serial port. As an added bonus, it is also possible to connect a TM1637 based 4 character LCD display to show the power status.
 
 
 ![power switch](img/switch.jpg)
