@@ -1,4 +1,7 @@
 #!/bin/sh
+# stop shutdown listener script
+sudo /bin/pkill -f serial_wait_shutdown.sh
+
 # configure serial port
 /usr/bin/stty -F /dev/ttyAMA0 9600 raw -echo
 

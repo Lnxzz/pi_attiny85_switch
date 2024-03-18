@@ -11,22 +11,29 @@
 
 . /lib/lsb/init-functions
 
+start_powercontrol() {
+  # configure serial port
+  /usr/bin/stty -F /dev/ttyAMA0 9600 raw -echo
+  # remove serial out temp gile
+  /bin/rm -f /tmp/ttyAMA0.dat
+  # allow serial port access to user pi
+  /sbin/usermod -a -G dialout pi
+  # send power button boot ok message
+  /home/pi/serial_bootok.sh
+  # start power button listener shutdown script
+  /home/pi/serial_wait_shutdown.sh&
+}
+
 case "$1" in
   start)
-    # configure serial port
-    /usr/bin/stty -F /dev/ttyAMA0 9600 raw -echo
-    # remove serial out temp gile
-    /bin/rm -f /tmp/ttyAMA0.dat
-    # allow serial port access to user pi
-    /sbin/usermod -a -G dialout pi
-    # send power button boot ok message
-    /home/pi/serial_bootok.sh
-    # start power button listener shutdown script
-    /home/pi/serial_wait_shutdown.sh&
+    start_powercontrol
     ;;
   stop)
+    pkill -f serial_wait_shutdown.sh
     ;;
   restart)
+    pkill -f serial_wait_shutdown.sh
+    start_powercontrol
     ;;
   force-reload)
     ;;
