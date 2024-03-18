@@ -1,13 +1,39 @@
 /**
  * ATTiny85 / Digispark - Raspberry Pi Power Control
+ * ----------------------------------------------------------------------------
  *
- * Version: 1.0
- * Date:    2024/03/17
+ * Version: 1.1
+ * Date:    2024/03/18
  * Author:  E. Heerschop
  *
  *
- * ATTiny85 pin assignment:
+ * Version history
+ * ----------------------------------------------------------------------------
+ * 2024/03/17 - initial version
+ * 2024/03/18 - added 'REBOOT' command
  *
+ *
+ * Pin assignment
+ * ----------------------------------------------------------------------------
+ * The button pin is connected with ADC0 of the ATTiny85, which is also the 
+ * reset pin. In order to prevent the microcontroller to reset, a voltage 
+ * divider is used with a 4.7K resister connected with ground and a 1K resistor
+ * connected with VCC. The switch point is around 930 on the scale between 0 
+ * and 1023.
+ *
+ * The UART TX pin of the raspberry pi is directly connected with the RX pin 
+ * on the ATTiny85. The TX pin on the ATTiny85 is connected to the UART RX pin 
+ * of the raspberry pi using a voltage divider. 
+ * (R1=1.6k / R2=3.3k, R2 connected to ground)
+ *
+ * PB1 and PB2 can be used to drive a TM1637 based display
+ * PB1 can be used to drive a led as well (use with ~220ohm resistor)
+ *
+ * PB0 is used to trigger a 5V relay switch module
+ *
+ *
+ * ATTiny85 pin assignment
+ * ----------------------------------------------------------------------------
  * 1 ADC0 POWER BUTTON            (analog input)
  * 3 PB4  SERIAL TX               (digital output)
  * 2 PB3  SERIAL RX               (digital input)
@@ -22,20 +48,10 @@
  *              Ground  4        5  PB0, PWM, I2C SDA, SPI MOSI
  *
  * 
- * Raspberry Pi pin assignment:
+ * Raspberry Pi pin assignment
+ * ----------------------------------------------------------------------------
  * UART TX         - RPi GPIO 14 / TXD / pin  8  - serial send
  * UART RX         - RPi GPIO 15 / RXD / pin 10  - serial receive
- *
- * The button pin is connected with ADC0, which is also the reset pin, to prevent the ATTiny85 to reset, 
- * a voltage divider is used with a 4.7K resister connected with ground and a 1K resistor connected with VCC.
- * The switch point is around 930 on the scale between 0 and 1023.
- *
- * The UART TX pin of the raspberry pi is directly connected with the RX pin on the ATTiny85.
- * The TX pin on the ATTiny85 is connected to the UART RX pin of the raspberry pi using a voltage divider.
- *
- * PB1 and PB2 can be used to drive a TM1637 based display
- *
- * PB0 is used to trigger a 5V relay switch module
  *
  *
  * This is free software; you can redistribute it and/or
@@ -63,9 +79,9 @@ const unsigned long BLINK_DELAY_MS = 250;      // delay time in ms for led blink
 const unsigned long BUTTON_DELAY_MS = 5;       // delay time in ms for sampling the power button
 const unsigned long SERIAL_DELTA_MS = 1000;    // min. time in ms before treating serial data as a new command
 const unsigned long SHORT_PRESS_MS = 2000;     // max. delay time in ms for a short press on the power button
-const unsigned long LONG_PRESS_MS = 3000;      // min. delay time in ms for a long press on the power button
+const unsigned long LONG_PRESS_MS = 4500;      // min. delay time in ms for a long press on the power button
 const unsigned long WAIT_TIMEOUT_MS = 30000;   // timeout in ms to wait for shutdown signal
-const unsigned long POWEROFF_DELAY_MS = 2000;  // delay time in ms to switch the relay off after power off detection or wait timeout
+const unsigned long POWEROFF_DELAY_MS = 2000;  // delay time in ms to switch the relay off after power off
 
 // pin assignment
 const uint8_t RELAY_PIN = PB0;      // PB0 pin connected with the relay switching the raspberry pi on and off
@@ -175,6 +191,7 @@ const long BAUD_RATE = 9600;           // serial baud rate
 const int CMD_NULL = 0x00;             // command not available
 const int CMD_BOOTOK = 0x42;           // 'BOOTOK'   - OS boot done
 const int CMD_SHUTDOWN = 0x53;         // 'SHUTDOWN' - shutdown initiated by software
+const int CMD_REBOOT = 0x52;           // 'REBOOT'   - reboot initiated by software
 const int CMD_LED = 0x4C;              // 'LED'      - use led for notification
 const int CMD_DISPLAY = 0x44;          // 'DISPLAY'  - use display for notification
 const int CMD_STATUS = 0x47;           // 'STATUS'   - get current power status
@@ -431,6 +448,9 @@ void check_serial_port() {
       } else if (starts_in_buffer("SHUTDOWN", 8)) {
         reset_buffer();
         command = CMD_SHUTDOWN;
+      } else if (starts_in_buffer("REBOOT", 6)) {
+        reset_buffer();
+        command = CMD_REBOOT;
       } else if (starts_in_buffer("LED", 3)) {
         reset_buffer();
         command = CMD_LED;
@@ -515,8 +535,19 @@ void loop() {
       power_status = POWERED_ON;
     } else if (command == CMD_SHUTDOWN) {
       // received software shutdown command: update power status
-      swserial.println("led");
+      swserial.println("softshutdown");
       power_status = POWERING_OFF;
+    } else if (command == CMD_REBOOT) {
+      // received software reboot command: update power status
+      swserial.println("softreboot");
+      if (display_mode == LED_MODE) {
+        set_led(LED_BLINK_CONT_OFF, BLINK_DELAY_MS);
+      } else {
+        display.setBrightness(DISPLAY_BRIGHTNESS, true);
+        display.clear();
+        display.setSegments(DISPLAY_MSG_BOOT);
+      }
+      power_status = POWERING_ON;
     } else if (command == CMD_LED) {
       // turn on led, turn off display
       swserial.println("led");
